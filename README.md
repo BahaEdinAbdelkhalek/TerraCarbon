@@ -230,7 +230,24 @@ crash.log
 
 ---
 
-## 7. Troubleshooting
+## 7. Live Dashboard
+
+The project includes a [Live Dashboard](file:///d:/TerraCarbon/dashboard.html) (`dashboard.html`) to visualize carbon intensity, resource health, automation activity, and cost trends.
+
+### How to use:
+1. **Deploy Terraform**: Run `terraform apply`.
+2. **Generate Outputs**: Export output variables to a JSON file in the root directory:
+   ```bash
+   terraform output -json > terraform_outputs.json
+   ```
+3. **Open Dashboard**: Double-click `dashboard.html` or host it locally.
+4. **Configure Azure Integration** (optional):
+   - Click "Dashboard configuration" in the dashboard.
+   - Set Azure Subscription ID, a Bearer Token (run `az account get-access-token --query accessToken -o tsv`), and the Log Analytics Workspace ID to load live cost and run logs.
+
+---
+
+## 8. Troubleshooting
 
 - **`Error: A resource with the ID ... already exists`** — someone already
   deployed with the same `project_suffix`; pick a new one.
