@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="Carbon-Aware Cost Optimization" width="100%" height="230vh">
+  <img src="assets/logo.png" alt="Carbon-Aware Cost Optimization" width="100%" height="330vh">
 </p>
 
 # TerraCarbon Cost Optimization — Terraform Infrastructure
