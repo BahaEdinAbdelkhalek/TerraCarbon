@@ -655,7 +655,12 @@ async function fetchTerraformOutputs() {
     const rgLoc  = get('resource_group_location');
     unskel('rgName',     rgName);
     unskel('rgLocation', rgLoc);
-    document.getElementById('infraMeta').textContent = `terraform output · ${rgName}`;
+    const genAt = get('generated_at');
+    let metaTxt = `terraform output · ${rgName}`;
+    if(genAt !== '—') {
+      metaTxt += ` (updated ${new Date(genAt).toLocaleTimeString()})`;
+    }
+    document.getElementById('infraMeta').textContent = metaTxt;
     const modules = [
       {
         title: 'Resource Group',
@@ -949,6 +954,16 @@ function renderLogFallback() {
 }
 async function refreshAll() {
   setRefreshTime();
+  try {
+    const tr = await fetch('token.json');
+    if(tr.ok) {
+      const td = await tr.json();
+      if(td.accessToken) {
+        cfg.token = td.accessToken;
+        document.getElementById('cfgToken').value = td.accessToken;
+      }
+    }
+  } catch(e){}
   await fetchCarbonIntensity();
   await fetchTerraformOutputs();
   await fetchAzureCosts();

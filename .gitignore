@@ -1,0 +1,9 @@
+terraform.tfvars
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+token.json
+terraform_outputs.json

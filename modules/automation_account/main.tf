@@ -1,26 +1,42 @@
 resource "azurerm_automation_account" "this" {
-  name                = var.automation_account_name
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  sku_name            = "Basic"
+  name                          = var.automation_account_name
+  resource_group_name           = var.resource_group_name
+  location                      = var.location
+  sku_name                      = "Basic"
+  local_authentication_enabled  = false
 
   identity {
     type = "SystemAssigned"
   }
+
   tags = var.tags
+}
 
+resource "azurerm_monitor_diagnostic_setting" "automation" {
+  name                       = "diag-${var.automation_account_name}"
+  target_resource_id         = azurerm_automation_account.this.id
+  log_analytics_workspace_id = var.log_analytics_id
 
+  enabled_log {
+    category = "JobLogs"
+  }
+
+  enabled_log {
+    category = "JobStreams"
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
 }
 
 
 resource "azurerm_role_assignment" "cost_reader" {
   scope                = "/subscriptions/${var.subscription_id}"
-  role_definition_name = "cost management reader "
-  principal_id         = azurerm_automation_account.this.identity
-
+  role_definition_name = "Cost Management Reader"
+  principal_id         = azurerm_automation_account.this.identity[0].principal_id
 }
-
-
 
 resource "azurerm_role_assignment" "vm_contributor" {
   scope                = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
@@ -34,15 +50,21 @@ resource "azurerm_role_assignment" "kv_secrets_user" {
   principal_id         = azurerm_automation_account.this.identity[0].principal_id
 }
 
+resource "azurerm_role_assignment" "log_analytics_contributor" {
+  scope                = var.log_analytics_id
+  role_definition_name = "Log Analytics Contributor"
+  principal_id         = azurerm_automation_account.this.identity[0].principal_id
+}
+
 resource "azurerm_automation_runbook" "carbon_optimization" {
   name                    = "CarbonOptimizationRunbook"
   resource_group_name     = var.resource_group_name
   location                = var.location
   automation_account_name = azurerm_automation_account.this.name
   runbook_type            = "PowerShell"
-  log_verbose             = true
+  log_verbose             = false
   log_progress            = true
-  description             = "Automated TerraCarbon cost optimization based on emissions data"
+  description             = "Carbon-aware cost optimization: reads thresholds from Key Vault, queries Azure Carbon API, flags over-provisioned resources"
 
   content = file("${path.module}/runbook.ps1")
 
@@ -56,11 +78,13 @@ resource "azurerm_automation_schedule" "daily" {
   frequency               = "Day"
   interval                = 1
   timezone                = "UTC"
-  start_time              = "2025-01-01T02:00:00Z"
-  description             = "Daily carbon optimization analysis at off-peak hours"
+  start_time              = timeadd(timestamp(), "24h")
+  description             = "Daily carbon optimization analysis at off-peak hours (02:00 UTC)"
+
+  lifecycle {
+    ignore_changes = [start_time]
+  }
 }
-
-
 
 resource "azurerm_automation_schedule" "peak" {
   name                    = "PeakCarbonOptimization"
@@ -69,9 +93,14 @@ resource "azurerm_automation_schedule" "peak" {
   frequency               = "Day"
   interval                = 1
   timezone                = "UTC"
-  start_time              = "2025-01-01T18:00:00Z"
-  description             = "Optimization during peak carbon intensity periods"
+  start_time              = timeadd(timestamp(), "25h")
+  description             = "Peak-hour carbon intensity evaluation (18:00 UTC)"
+
+  lifecycle {
+    ignore_changes = [start_time]
+  }
 }
+
 resource "azurerm_automation_job_schedule" "daily" {
   resource_group_name     = var.resource_group_name
   automation_account_name = azurerm_automation_account.this.name
@@ -79,11 +108,12 @@ resource "azurerm_automation_job_schedule" "daily" {
   schedule_name           = azurerm_automation_schedule.daily.name
 
   parameters = {
-    SubscriptionId    = var.subscription_id
-    ResourceGroupName = var.resource_group_name
-    KeyVaultName      = var.key_vault_name
+    subscriptionid    = var.subscription_id
+    resourcegroupname = var.resource_group_name
+    keyvaultname      = var.key_vault_name
   }
 }
+
 resource "azurerm_automation_job_schedule" "peak" {
   resource_group_name     = var.resource_group_name
   automation_account_name = azurerm_automation_account.this.name
@@ -91,8 +121,8 @@ resource "azurerm_automation_job_schedule" "peak" {
   schedule_name           = azurerm_automation_schedule.peak.name
 
   parameters = {
-    SubscriptionId    = var.subscription_id
-    ResourceGroupName = var.resource_group_name
-    KeyVaultName      = var.key_vault_name
+    subscriptionid    = var.subscription_id
+    resourcegroupname = var.resource_group_name
+    keyvaultname      = var.key_vault_name
   }
 }
