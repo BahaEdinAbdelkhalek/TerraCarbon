@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="Carbon-Aware Cost Optimization" width="100%">
+</p>
+
 # TerraCarbon Cost Optimization — Terraform Infrastructure
 
 Modular Terraform implementation of Azure's TerraCarbon cost optimization
