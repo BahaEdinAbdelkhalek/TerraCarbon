@@ -239,12 +239,3 @@ crash.log
   (`az account show`).
 
 ---
-
-## 8. Roadmap / suggested next steps
-
-- Move thresholds and `project_suffix` generation into a CI/CD pipeline
-  (GitHub Actions / Azure DevOps) instead of manual `terraform apply`.
-- Add `azurerm_monitor_diagnostic_setting` to route all resource logs to
-  the Log Analytics workspace automatically.
-- Replace direct HTTP calls in the Logic App with Azure-native connectors
-  once a long-term workflow is finalized.
