@@ -197,15 +197,7 @@ terraform destroy
 
 Apply these before treating this as production-ready:
 
-| # | Severity | Issue | Fix |
-|---|---|---|---|
-| 1 | 🔴 High | Secrets leak if `.tfvars`/state committed to Git | `.gitignore` (included below) |
-| 2 | 🔴 High | Local state stores secrets in plaintext | Remote `azurerm` backend (Section 2 — already required) |
-| 3 | 🔴 High | `Virtual Machine Contributor` scoped to whole subscription | Scope to the resource group instead |
-| 4 | 🔴 High | Key Vault has no purge protection | `soft_delete_retention_days` + `purge_protection_enabled` |
-| 5 | 🟡 Medium | Storage account allows public network access | Disable public blob access, enforce TLS 1.2 |
-| 6 | 🟡 Medium | Log retention only 30 days | Raise to 90+ days for audit trail |
-| 7 | 🟡 Medium | No resource locks | `azurerm_management_lock` on the resource group |
+
 
 `.gitignore` (place in project root):
 
